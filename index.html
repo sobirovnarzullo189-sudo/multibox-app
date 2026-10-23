@@ -7,7 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg: var(--tg-theme-bg-color, #0f0f11);
+            --bg: var(--tg-theme-bg-color, #0a0a0c);
             --text: var(--tg-theme-text-color, #ffffff);
             --hint: var(--tg-theme-hint-color, #8e8e93);
             --card-bg: var(--tg-theme-secondary-bg-color, #1c1c1e);
@@ -17,26 +17,32 @@
         body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); padding-bottom: 80px; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; color: var(--accent); }
+        .logo { font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
         .user-btn { background: var(--card-bg); padding: 6px 12px; border-radius: 20px; font-size: 14px; border: none; color: var(--text); }
 
         .tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
-        .tab { background: var(--card-bg); border: none; padding: 10px 16px; border-radius: 12px; color: var(--hint); cursor: pointer; white-space: nowrap; font-size: 15px; }
+        .tab { background: var(--card-bg); border: none; padding: 10px 16px; border-radius: 12px; color: var(--hint); cursor: pointer; white-space: nowrap; font-size: 15px; transition: 0.2s; }
         .tab.active { background: var(--accent); color: #000; font-weight: bold; }
 
         .search { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #333; background: var(--card-bg); color: var(--text); margin-bottom: 20px; font-size: 15px; }
         .search:focus { outline: none; border-color: var(--accent); }
 
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
-        .card:active { transform: scale(0.98); }
-        .card-img { height: 160px; background: #2c2c2e; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
-        .card-title { font-size: 15px; font-weight: bold; margin: 0 0 4px 0; }
-        .card-desc { font-size: 12px; color: var(--hint); margin: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .card { background: transparent; border-radius: 12px; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
+        .card:active { transform: scale(0.96); }
+        .card-img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 12px; background: #2c2c2e; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .card-title { font-size: 15px; font-weight: bold; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-desc { font-size: 13px; color: var(--hint); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .game-section { display: none; background: var(--card-bg); padding: 20px; border-radius: 12px; text-align: center; }
-        .game-section input { padding: 10px; font-size: 18px; width: 100px; text-align: center; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; margin: 10px; }
-        .game-btn { padding: 10px 20px; font-size: 16px; border-radius: 8px; background: var(--accent); color: #000; border: none; font-weight: bold; cursor: pointer; }
+        /* Стили для полноэкранного плеера */
+        #player-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; flex-direction: column;
+        }
+        .player-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(0,0,0,0.8); }
+        .player-header h2 { margin: 0; font-size: 18px; color: white; }
+        .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .iframe-container { flex: 1; width: 100%; background: #000; position: relative; }
+        .iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
@@ -50,19 +56,20 @@
         <button class="tab active" data-type="movie">🎬 Фильмы</button>
         <button class="tab" data-type="book">📚 Книги</button>
         <button class="tab" data-type="music">🎵 Музыка</button>
-        <button class="tab" data-type="game">🎮 Игра</button>
     </div>
 
     <input type="text" id="search" class="search" placeholder="Поиск...">
-
     <div class="grid" id="catalog"></div>
 
-    <div class="game-section" id="game">
-        <h2>Угадай число</h2>
-        <p>Я загадал число от 1 до 100.</p>
-        <input type="number" id="guess" placeholder="Ваш вариант">
-        <button class="game-btn" onclick="checkGuess()">Проверить</button>
-        <p id="game-result" style="margin-top: 15px; font-weight: bold;"></p>
+    <!-- Экран плеера -->
+    <div id="player-screen">
+        <div class="player-header">
+            <h2 id="player-title">Загрузка...</h2>
+            <button class="close-btn" onclick="closePlayer()">✖</button>
+        </div>
+        <div class="iframe-container">
+            <iframe id="video-iframe" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        </div>
     </div>
 
     <script>
@@ -70,51 +77,44 @@
         tg.ready();
         tg.expand();
 
-        // Имя пользователя
         const user = tg.initDataUnsafe?.user;
         if (user) {
             document.getElementById('user-name').innerText = user.first_name;
         }
 
-        // База данных (Демо)
+        // База с настоящими фильмами и ссылками на плееры
         const db = {
             movie: [
-                { title: "Интерстеллар", desc: "Фантастика", icon: "🚀" },
-                { title: "Начало", desc: "Триллер", icon: "🌀" },
-                { title: "Матрица", desc: "Боевик", icon: "🕶️" },
-                { title: "Джентльмены", desc: "Криминал", icon: "🎩" }
+                { 
+                    title: "Интерстеллар", 
+                    desc: "Фантастика", 
+                    img: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+                    // Ссылка на встроенный плеер (пример VK Video)
+                    player: "https://vk.com/video_ext.php?oid=-12345678&id=456239017&hash=abcdef1234567890" 
+                },
+                { 
+                    title: "Джон Уик 4", 
+                    desc: "Боевик", 
+                    img: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+                    player: "https://vk.com/video_ext.php?oid=-12345678&id=456239017&hash=abcdef1234567890"
+                },
+                { 
+                    title: "Оппенгеймер", 
+                    desc: "Драма", 
+                    img: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+                    player: "https://vk.com/video_ext.php?oid=-12345678&id=456239017&hash=abcdef1234567890"
+                }
             ],
-            book: [
-                { title: "Евгений Онегин", desc: "Пушкин", icon: "📖" },
-                { title: "1984", desc: "Оруэлл", icon: "👁️" },
-                { title: "Гарри Поттер", desc: "Роулинг", icon: "⚡" }
-            ],
-            music: [
-                { title: "Blinding Lights", desc: "The Weeknd", icon: "🎵" },
-                { title: "Bohemian Rhapsody", desc: "Queen", icon: "🎸" },
-                { title: "Shape of You", desc: "Ed Sheeran", icon: "🎤" }
-            ]
+            book: [], // Пока пусто
+            music: [] // Пока пусто
         };
 
         let currentType = 'movie';
 
-        // Отрисовка каталога
         function render() {
             const catalog = document.getElementById('catalog');
-            const game = document.getElementById('game');
             const searchInput = document.getElementById('search');
             
-            if (currentType === 'game') {
-                catalog.style.display = 'none';
-                searchInput.style.display = 'none';
-                game.style.display = 'block';
-                return;
-            }
-
-            catalog.style.display = 'grid';
-            searchInput.style.display = 'block';
-            game.style.display = 'none';
-
             const query = searchInput.value.toLowerCase();
             const items = db[currentType].filter(item => item.title.toLowerCase().includes(query));
             
@@ -123,10 +123,20 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="card-img">${item.icon}</div>
+                    <img src="${item.img}" class="card-img" onerror="this.style.display='none'">
                     <h3 class="card-title">${item.title}</h3>
                     <p class="card-desc">${item.desc}</p>
                 `;
+                
+                // Клик по карточке открывает плеер
+                card.addEventListener('click', () => {
+                    document.getElementById('player-title').innerText = item.title;
+                    document.getElementById('video-iframe').src = item.player;
+                    document.getElementById('player-screen').style.display = 'flex';
+                    // Скрываем стандартную кнопку "Назад" в Telegram, чтобы не было конфликта
+                    tg.BackButton.show();
+                });
+                
                 catalog.appendChild(card);
             });
 
@@ -135,7 +145,18 @@
             }
         }
 
-        // Переключение вкладок
+        // Закрытие плеера
+        window.closePlayer = function() {
+            document.getElementById('player-screen').style.display = 'none';
+            document.getElementById('video-iframe').src = '';
+            tg.BackButton.hide();
+        }
+
+        // Обработка кнопки "Назад" в Telegram
+        tg.BackButton.onClick(() => {
+            closePlayer();
+        });
+
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -145,34 +166,8 @@
             });
         });
 
-        // Поиск
         document.getElementById('search').addEventListener('input', render);
 
-        // Игра
-        let secretNumber = Math.floor(Math.random() * 100) + 1;
-        let attempts = 0;
-        window.checkGuess = function() {
-            const input = document.getElementById('guess');
-            const result = document.getElementById('game-result');
-            const val = parseInt(input.value);
-            
-            if (!val) return;
-            attempts++;
-
-            if (val === secretNumber) {
-                result.style.color = '#7bd88f';
-                result.innerText = `🎉 Угадал! Число: ${secretNumber}. Попыток: ${attempts}`;
-                document.getElementById('guess').disabled = true;
-            } else if (val < secretNumber) {
-                result.style.color = '#ff9f0a';
-                result.innerText = "📈 Больше";
-            } else {
-                result.style.color = '#ff9f0a';
-                result.innerText = "📉 Меньше";
-            }
-        }
-
-        // Инициализация
         render();
     </script>
 </body>
