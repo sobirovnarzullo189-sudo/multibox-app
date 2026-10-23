@@ -2,311 +2,178 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MultiBox Premium App</title>
-    <!-- Подключаем официальный скрипт Telegram WebApp -->
-    <script src="https://telegram.org"></script>
-    <!-- Подключаем иконки Lucide для красивого меню -->
-    <script src="https://unpkg.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MultiBox</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #0f0f16);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #8e8e93);
-            --accent-color: var(--tg-theme-button-color, #007aff);
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --glass-blur: blur(15px);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --bg: var(--tg-theme-bg-color, #0f0f11);
+            --text: var(--tg-theme-text-color, #ffffff);
+            --hint: var(--tg-theme-hint-color, #8e8e93);
+            --card-bg: var(--tg-theme-secondary-bg-color, #1c1c1e);
+            --accent: #4ea1ff;
         }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: var(--accent); }
+        .user-btn { background: var(--card-bg); padding: 6px 12px; border-radius: 20px; font-size: 14px; border: none; color: var(--text); }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        .tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+        .tab { background: var(--card-bg); border: none; padding: 10px 16px; border-radius: 12px; color: var(--hint); cursor: pointer; white-space: nowrap; font-size: 15px; }
+        .tab.active { background: var(--accent); color: #000; font-weight: bold; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f0f16 0%, #151528 100%);
-            color: var(--text-color);
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 90px;
-        }
+        .search { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #333; background: var(--card-bg); color: var(--text); margin-bottom: 20px; font-size: 15px; }
+        .search:focus { outline: none; border-color: var(--accent); }
 
-        /* Премиальный эффект матового стекла (Glassmorphism) */
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
-            margin: 15px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
+        .card:active { transform: scale(0.98); }
+        .card-img { height: 160px; background: #2c2c2e; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .card-title { font-size: 15px; font-weight: bold; margin: 0 0 4px 0; }
+        .card-desc { font-size: 12px; color: var(--hint); margin: 0; }
 
-        header {
-            padding: 20px 15px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header h1 {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(45deg, #007aff, #00ffcc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.08); 
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 1px solid var(--glass-border);
-        }
-
-        /* Навигация (Нижнее меню) */
-        nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 15, 22, 0.85);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-top: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--hint-color);
-            font-size: 11px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            width: 20%;
-        }
-
-        .nav-item.active {
-            color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        .nav-item i {
-            width: 24px;
-            height: 24px;
-        }
-
-        /* Разделы приложения */
-        .content-section {
-            display: none;
-            animation: fadeIn 0.4s ease forwards;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Стили кликера */
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 0;
-        }
-
-        .score-display {
-            font-size: 42px;
-            font-weight: 800;
-            margin-bottom: 5px;
-            color: #ffd700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .passive-income {
-            font-size: 14px;
-            color: #00ffcc;
-            margin-bottom: 30px;
-        }
-
-        .click-circle {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #2c2c44 0%, #1a1a2e 100%);
-            border: 6px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(0, 122, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.05s ease;
-        }
-
-        .click-circle:active {
-            transform: scale(0.96);
-            border-color: var(--accent-color);
-        }
-
-        .click-circle img {
-            width: 120px;
-            height: 120px;
-            pointer-events: none;
-        }
-
-        .upgrade-btn {
-            background: linear-gradient(45deg, var(--accent-color), #0051ff);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 14px;
-            font-weight: 600;
-            margin-top: 35px;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-        }
-
-        /* Стили контента для Кино, Музыки, Книг */
-        .grid-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .media-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .media-thumb {
-            width: 100%;
-            aspect-ratio: 16/10;
-            background: #232335;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--hint-color);
-        }
-
-        .media-info {
-            padding: 10px;
-        }
-
-        .media-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .media-subtitle {
-            font-size: 12px;
-            color: var(--hint-color);
-        }
-
-        /* Текст вылетающих цифр при клике */
-        .floating-text {
-            position: absolute;
-            color: #ffd700;
-            font-size: 28px;
-            font-weight: 800;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
-        }
+        .game-section { display: none; background: var(--card-bg); padding: 20px; border-radius: 12px; text-align: center; }
+        .game-section input { padding: 10px; font-size: 18px; width: 100px; text-align: center; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; margin: 10px; }
+        .game-btn { padding: 10px 20px; font-size: 16px; border-radius: 8px; background: var(--accent); color: #000; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>MultiBox</h1>
-        <div class="user-badge">
-            <i data-lucide="user" style="width:16px; height:16px;"></i>
-            <span id="username-display">User</span>
-        </div>
-    </header>
-
-    <!-- КИНО -->
-    <div id="movies" class="content-section active">
-        <div class="glass-card">
-            <h2>🍿 Популярные фильмы</h2>
-            <div class="grid-grid">
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="clapperboard"></i></div>
-                    <div class="media-info"><div class="media-title">Интерстеллар</div><div class="media-subtitle">Фантастика</div></div>
-                </div>
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="clapperboard"></i></div>
-                    <div class="media-info"><div class="media-title">Начало</div><div class="media-subtitle">Триллер</div></div>
-                </div>
-            </div>
-        </div>
+    <div class="header">
+        <div class="logo">MultiBox</div>
+        <button class="user-btn" id="user-name">Гость</button>
     </div>
 
-    <!-- МУЗЫКА -->
-    <div id="music" class="content-section">
-        <div class="glass-card">
-            <h2>🎧 Тренды недели</h2>
-            <div class="grid-grid">
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="music-4"></i></div>
-                    <div class="media-info"><div class="media-title">Night Vibes</div><div class="media-subtitle">Lo-Fi Beats</div></div>
-                </div>
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="music-4"></i></div>
-                    <div class="media-info"><div class="media-title">Cyberpunk Drive</div><div class="media-subtitle">Synthwave</div></div>
-                </div>
-            </div>
-        </div>
+    <div class="tabs" id="tabs">
+        <button class="tab active" data-type="movie">🎬 Фильмы</button>
+        <button class="tab" data-type="book">📚 Книги</button>
+        <button class="tab" data-type="music">🎵 Музыка</button>
+        <button class="tab" data-type="game">🎮 Игра</button>
     </div>
 
-    <!-- КНИГИ -->
-    <div id="books" class="content-section">
-        <div class="glass-card">
-            <h2>📚 Топ книг</h2>
-            <div class="grid-grid">
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="book-open"></i></div>
-                    <div class="media-info"><div class="media-title">Атомные привычки</div><div class="media-subtitle">Саморазвитие</div></div>
-                </div>
-                <div class="media-card">
-                    <div class="media-thumb"><i data-lucide="book-open"></i></div>
-                    <div class="media-info"><div class="media-title">Дюна</div><div class="media-subtitle">Фантастика</div></div>
-                </div>
-            </div>
-        </div>
+    <input type="text" id="search" class="search" placeholder="Поиск...">
+
+    <div class="grid" id="catalog"></div>
+
+    <div class="game-section" id="game">
+        <h2>Угадай число</h2>
+        <p>Я загадал число от 1 до 100.</p>
+        <input type="number" id="guess" placeholder="Ваш вариант">
+        <button class="game-btn" onclick="checkGuess()">Проверить</button>
+        <p id="game-result" style="margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Имя пользователя
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('user-name').innerText = user.first_name;
+        }
+
+        // База данных (Демо)
+        const db = {
+            movie: [
+                { title: "Интерстеллар", desc: "Фантастика", icon: "🚀" },
+                { title: "Начало", desc: "Триллер", icon: "🌀" },
+                { title: "Матрица", desc: "Боевик", icon: "🕶️" },
+                { title: "Джентльмены", desc: "Криминал", icon: "🎩" }
+            ],
+            book: [
+                { title: "Евгений Онегин", desc: "Пушкин", icon: "📖" },
+                { title: "1984", desc: "Оруэлл", icon: "👁️" },
+                { title: "Гарри Поттер", desc: "Роулинг", icon: "⚡" }
+            ],
+            music: [
+                { title: "Blinding Lights", desc: "The Weeknd", icon: "🎵" },
+                { title: "Bohemian Rhapsody", desc: "Queen", icon: "🎸" },
+                { title: "Shape of You", desc: "Ed Sheeran", icon: "🎤" }
+            ]
+        };
+
+        let currentType = 'movie';
+
+        // Отрисовка каталога
+        function render() {
+            const catalog = document.getElementById('catalog');
+            const game = document.getElementById('game');
+            const searchInput = document.getElementById('search');
+            
+            if (currentType === 'game') {
+                catalog.style.display = 'none';
+                searchInput.style.display = 'none';
+                game.style.display = 'block';
+                return;
+            }
+
+            catalog.style.display = 'grid';
+            searchInput.style.display = 'block';
+            game.style.display = 'none';
+
+            const query = searchInput.value.toLowerCase();
+            const items = db[currentType].filter(item => item.title.toLowerCase().includes(query));
+            
+            catalog.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-img">${item.icon}</div>
+                    <h3 class="card-title">${item.title}</h3>
+                    <p class="card-desc">${item.desc}</p>
+                `;
+                catalog.appendChild(card);
+            });
+
+            if (items.length === 0) {
+                catalog.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: gray;">Ничего не найдено</p>';
+            }
+        }
+
+        // Переключение вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                currentType = e.target.dataset.type;
+                render();
+            });
+        });
+
+        // Поиск
+        document.getElementById('search').addEventListener('input', render);
+
+        // Игра
+        let secretNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        window.checkGuess = function() {
+            const input = document.getElementById('guess');
+            const result = document.getElementById('game-result');
+            const val = parseInt(input.value);
+            
+            if (!val) return;
+            attempts++;
+
+            if (val === secretNumber) {
+                result.style.color = '#7bd88f';
+                result.innerText = `🎉 Угадал! Число: ${secretNumber}. Попыток: ${attempts}`;
+                document.getElementById('guess').disabled = true;
+            } else if (val < secretNumber) {
+                result.style.color = '#ff9f0a';
+                result.innerText = "📈 Больше";
+            } else {
+                result.style.color = '#ff9f0a';
+                result.innerText = "📉 Меньше";
+            }
+        }
+
+        // Инициализация
+        render();
+    </script>
+</body>
+</html>
